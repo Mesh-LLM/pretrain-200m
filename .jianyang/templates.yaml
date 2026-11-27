@@ -1,0 +1,37 @@
+templates:
+  - name: pretrain-200m
+    kind: check
+    description: "Pretrain 200M Llama-style transformer on FineWeb-Edu + goose data (~36h on Spark GB10)"
+    command: |
+      set -euo pipefail
+      progress() {
+        printf '%s%% %s\n' "$1" "$2" > "${JIANYANG_PROGRESS_PATH:-/dev/null}"
+        echo "PROGRESS ${JIANYANG_NODE:-?} $(date +%T) $1% $2"
+      }
+      
+      progress 0 "starting pretrain-200m on $(hostname)"
+      
+      # Check GPU
+      progress 2 "checking GPU"
+      nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || echo "WARNING: nvidia-smi not found"
+      python3 -c "import torch; print(f'CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"none\"}')"
+      
+      # Install dependencies
+      progress 5 "installing dependencies"
+      pip install --quiet transformers datasets numpy 2>&1 | tail -3
+      
+      # Decompress goose data
+      progress 8 "decompressing goose session data"
+      gunzip -k goose_all_combined.txt.gz
+      echo "Goose data: $(wc -c < goose_all_combined.txt) bytes"
+      
+      # Tokenize (downloads FineWeb-Edu + tokenizes goose data)
+      progress 10 "tokenizing data (downloading FineWeb-Edu, this takes ~1h)"
+      HF_HOME=./hf_cache python3 pretrain_200m.py --tokenize 2>&1 | tee tokenize.log
+      
+      progress 30 "data tokenized, starting training"
+      
+      # Train
+      python3 pretrain_200m.py 2>&1 | tee train.log
+      
+      progress 100 "training complete - checkpoints in ./checkpoints/"
