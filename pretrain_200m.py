@@ -31,12 +31,12 @@ CONFIG = {
     "intermediate_size": 2048,
 
     # Training
-    "batch_size": 8,
-    "grad_accum_steps": 64,
+    "batch_size": 32,
+    "grad_accum_steps": 16,
     "learning_rate": 3e-4,
     "min_lr": 3e-5,
-    "warmup_iters": 2000,
-    "max_iters": 100000,
+    "warmup_iters": 500,
+    "max_iters": 5000,
     "lr_decay": "cosine",
     "weight_decay": 0.1,
     "grad_clip": 1.0,
@@ -52,7 +52,7 @@ CONFIG = {
 
     # Checkpointing
     "checkpoint_dir": "/mnt/model-store/pretrain-200m/checkpoints",
-    "checkpoint_interval": 2000,
+    "checkpoint_interval": 500,
     "log_interval": 25,
 
     # Data mix
