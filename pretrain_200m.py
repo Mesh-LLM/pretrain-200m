@@ -42,15 +42,16 @@ CONFIG = {
     "grad_clip": 1.0,
     "bf16": True,
 
-    # Data
+    # Data — use persistent shared storage so data survives job restarts
     "goose_data_path": "./goose_all_combined.txt",
     "fineweb_cache": "./hf_cache",
-    "train_bin": "./train.bin",
-    "val_bin": "./val.bin",
+    "data_dir": "/mnt/model-store/pretrain-200m",
+    "train_bin": "/mnt/model-store/pretrain-200m/train.bin",
+    "val_bin": "/mnt/model-store/pretrain-200m/val.bin",
     "val_tokens": 10_000_000,
 
     # Checkpointing
-    "checkpoint_dir": "./checkpoints",
+    "checkpoint_dir": "/mnt/model-store/pretrain-200m/checkpoints",
     "checkpoint_interval": 2000,
     "log_interval": 25,
 
@@ -379,7 +380,16 @@ def train():
     print(f"\nTraining complete! best val loss: {best_val_loss:.4f}")
 
 if __name__ == "__main__":
+    # Ensure data directory exists
+    os.makedirs(CONFIG.get("data_dir", "."), exist_ok=True)
+    os.makedirs(CONFIG["checkpoint_dir"], exist_ok=True)
+
     if "--tokenize" in sys.argv:
-        tokenize_data(CONFIG["goose_data_path"], CONFIG["train_bin"], CONFIG["val_bin"], CONFIG["val_tokens"])
+        # Skip if already tokenized (resumability)
+        if os.path.exists(CONFIG["train_bin"]) and os.path.getsize(CONFIG["train_bin"]) > 1e9:
+            print(f"Tokenized data already exists: {CONFIG['train_bin']} "
+                  f"({os.path.getsize(CONFIG['train_bin'])/1e9:.2f} GB) — skipping tokenization")
+        else:
+            tokenize_data(CONFIG["goose_data_path"], CONFIG["train_bin"], CONFIG["val_bin"], CONFIG["val_tokens"])
     else:
         train()
