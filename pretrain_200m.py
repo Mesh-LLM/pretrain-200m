@@ -55,14 +55,14 @@ CONFIG = {
     "bf16": True,
 
     # Data
-    "goose_data_path": "/workspace/goose_all_combined.txt",
-    "fineweb_cache": "/workspace/fineweb_cache",
-    "train_bin": "/workspace/train.bin",
-    "val_bin": "/workspace/val.bin",
+    "goose_data_path": "./goose_all_combined.txt",
+    "fineweb_cache": "./hf_cache",
+    "train_bin": "./train.bin",
+    "val_bin": "./val.bin",
     "val_tokens": 10_000_000,  # 10M val tokens
 
     # Checkpointing
-    "checkpoint_dir": "/workspace/checkpoints",
+    "checkpoint_dir": "./checkpoints",
     "checkpoint_interval": 2000,
     "log_interval": 25,
 
